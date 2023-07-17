@@ -22,6 +22,13 @@ else
         sudo apt install nginx -y
     fi
 
+    # Install unzip if not already installed
+    if ! command -v unzip &> /dev/null
+    then
+        sudo apt update
+        sudo apt install unzip -y
+    fi
+
     # Install dialog if not already installed
     if ! command -v dialog &> /dev/null
     then
