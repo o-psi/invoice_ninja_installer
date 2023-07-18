@@ -205,3 +205,6 @@ if [ $? -ne 0 ]; then
     echo "Certbot failed to obtain and install a TLS certificate. Please check your domain and try again."
     exit 1
 fi
+
+sudo chown -R www-data:www-data /var/www/invoiceninja
+sudo chmod -R 775 /var/www/invoiceninja
