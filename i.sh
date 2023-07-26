@@ -8,32 +8,6 @@ if [ -f "$config_file" ]; then
     echo "Configuration file found. Reusing saved configuration."
     source $config_file
 else
-    # Install MySQL client if not already installed
-    if ! command -v mysql &> /dev/null
-    then
-        sudo apt update
-        sudo apt install mysql-client -y
-    fi
-
-    # Install MySQL client if not already installed
-    if ! command -v nginx &> /dev/null
-    then
-        sudo apt update
-        sudo apt install nginx -y
-    fi
-
-    # Install unzip if not already installed
-    if ! command -v unzip &> /dev/null
-    then
-        sudo apt update
-        sudo apt install unzip -y
-    fi
-
-    # Install dialog if not already installed
-    if ! command -v dialog &> /dev/null
-    then
-        sudo apt install dialog -y
-    fi
 
     # Ask for necessary user inputs
     db_location=$(dialog --ascii-lines  --stdout --inputbox "Is the database server local or on a network? (local/network): " 0 0)
@@ -93,6 +67,34 @@ fi
 
 # Step 3: Install PHP Modules
 if [ "$rerun" != "y" ]; then
+
+        # Install MySQL client if not already installed
+    if ! command -v mysql &> /dev/null
+    then
+        sudo apt update
+        sudo apt install mysql-client -y
+    fi
+
+    # Install MySQL client if not already installed
+    if ! command -v nginx &> /dev/null
+    then
+        sudo apt update
+        sudo apt install nginx -y
+    fi
+
+    # Install unzip if not already installed
+    if ! command -v unzip &> /dev/null
+    then
+        sudo apt update
+        sudo apt install unzip -y
+    fi
+
+    # Install dialog if not already installed
+    if ! command -v dialog &> /dev/null
+    then
+        sudo apt install dialog -y
+    fi
+
     sudo apt install software-properties-common -y
     sudo add-apt-repository ppa:ondrej/php -y
     sudo apt install php-imagick php8.0 php8.0-mysql php8.0-fpm php8.0-common php8.0-bcmath php8.0-gd php8.0-curl php8.0-zip php8.0-xml php8.0-mbstring php8.0-bz2 php8.0-intl php8.0-gmp -y
