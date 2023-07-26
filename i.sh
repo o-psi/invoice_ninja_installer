@@ -36,16 +36,16 @@ else
     fi
 
     # Ask for necessary user inputs
-    db_location=$(dialog --stdout --inputbox "Is the database server local or on a network? (local/network): " 0 0)
-    domain=$(dialog --stdout --inputbox "Please enter your domain (e.g., invoice.yourdomain.com): " 0 0)
-    email=$(dialog --stdout --inputbox "Please enter your email (for Let's Encrypt certificate): " 0 0)
-    mysql_username=$(dialog --stdout --inputbox "Please enter your desired MySQL username: " 0 0)
-    mysql_password=$(dialog --stdout --passwordbox "Please enter your desired MySQL password: " 0 0)
+    db_location=$(dialog --ascii-lines  --stdout --inputbox "Is the database server local or on a network? (local/network): " 0 0)
+    domain=$(dialog --ascii-lines --stdout --inputbox "Please enter your domain (e.g., invoice.yourdomain.com): " 0 0)
+    email=$(dialog --ascii-lines --stdout --inputbox "Please enter your email (for Let's Encrypt certificate): " 0 0)
+    mysql_username=$(dialog --ascii-lines --stdout --inputbox "Please enter your desired MySQL username: " 0 0)
+    mysql_password=$(dialog --ascii-lines --stdout --passwordbox "Please enter your desired MySQL password: " 0 0)
 
     # If the database server is on a network, ask for the network address and port
     if [ "$db_location" = "network" ]; then
-        db_network_address=$(dialog --stdout --inputbox "Please enter the network address of the database server: " 0 0)
-        db_port=$(dialog --stdout --inputbox "Please enter the port number of the database server: " 0 0)
+        db_network_address=$(dialog --ascii-lines --stdout --inputbox "Please enter the network address of the database server: " 0 0)
+        db_port=$(dialog --ascii-lines --stdout --inputbox "Please enter the port number of the database server: " 0 0)
     else
         db_network_address="localhost"
         db_port="3306"
@@ -113,10 +113,13 @@ fi
 
 # Step 4: Configure InvoiceNinja
 cd /var/www/invoiceninja/
+ls -l   # List files to check if .env.example exists
 if [ "$rerun" != "y" ]; then
+    echo "Copying .env.example to .env"
     sudo cp .env.example .env
+    echo "Copy operation completed with exit code $?"
+    ls -l .env  # Check if .env now exists
 fi
-
 # Edit the .env file as per your configuration
 sudo sed -i "s/DB_HOST=.*/DB_HOST=$db_network_address/" .env
 sudo sed -i "s/DB_PORT=.*/DB_PORT=$db_port/" .env
@@ -134,6 +137,10 @@ sudo php8.0 /var/www/invoiceninja/artisan migrate:fresh --seed
 # Step 5: Setting Up Nginx Web Server
 # Create a invoiceninja.conf file in /etc/nginx/conf.d/ directory
 if [ "$rerun" != "y" ]; then
+    # Install composer and npm dependencies
+    sudo composer install --no-dev -o
+    sudo npm install    
+    sudo npm run production
     sudo bash -c 'cat > /etc/nginx/conf.d/invoiceninja.conf << EOF
 server {
     listen   80;
@@ -205,6 +212,23 @@ if [ $? -ne 0 ]; then
     echo "Certbot failed to obtain and install a TLS certificate. Please check your domain and try again."
     exit 1
 fi
+
+# Configure the cron job
+sudo crontab -l > mycron
+echo "* * * * * cd /var/www/invoiceninja && php artisan schedule:run >> /dev/null 2>&1" >> mycron
+sudo crontab mycron
+rm mycron
+
+
+# Generate a key for the application
+sudo php artisan key:generate
+
+# Run the database migrations
+sudo php artisan migrate
+
+# Restart the Nginx and PHP services
+sudo systemctl restart nginx
+sudo systemctl restart php8.1-fpm
 
 sudo chown -R www-data:www-data /var/www/invoiceninja
 sudo chmod -R 775 /var/www/invoiceninja
