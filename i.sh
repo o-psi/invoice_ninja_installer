@@ -91,13 +91,6 @@ elif [ "$db_location" = "network" ]; then
 fi
 
 
-# Check if MySQL commands were successful
-if [ $? -ne 0 ]; then
-    echo "Failed to create database or user in MySQL. Please check your MySQL server and try again."
-    echo 'sudo mysql -h $db_network_address -u $mysql_username -P $db_port -e "CREATE DATABASE invoiceninja; CREATE USER '$mysql_username'@'$db_network_address' IDENTIFIED BY '$mysql_password'; GRANT ALL PRIVILEGES ON invoiceninja.* TO '$mysql_username'@'$db_network_address'; FLUSH PRIVILEGES;"'
-    exit 1
-fi
-
 # Step 3: Install PHP Modules
 if [ "$rerun" != "y" ]; then
     sudo apt install software-properties-common -y
